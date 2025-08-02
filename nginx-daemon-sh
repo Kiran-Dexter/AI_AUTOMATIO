@@ -1,0 +1,91 @@
+#!/bin/bash
+set -euo pipefail
+
+read -rp "Enter the NGINX install path (e.g. /data/nginx1.26): " INSTALL_DIR
+INSTALL_DIR="${INSTALL_DIR%/}"
+
+NGINX_BIN="${INSTALL_DIR}/sbin/nginx"
+NGINX_CONF="${INSTALL_DIR}/nginx.conf"
+PID_FILE="${INSTALL_DIR}/nginx.pid"
+SERVICE_FILE="/etc/systemd/system/nginx.service"
+SYMLINK="/usr/local/bin/nginx"
+
+# validation
+if [[ ! -x "$NGINX_BIN" ]]; then
+    echo "Error: NGINX binary not found or not executable at $NGINX_BIN"
+    exit 1
+fi
+
+if [[ ! -f "$NGINX_CONF" ]]; then
+    echo "Error: NGINX config not found at $NGINX_CONF"
+    exit 1
+fi
+
+# warn if distro nginx is present
+if rpm -q nginx >/dev/null 2>&1; then
+    echo "Warning: distro nginx package is installed; service name 'nginx' may conflict. Proceeding anyway."
+fi
+
+# ensure pid directive matches unit
+# if nginx.conf doesn't have a pid line, add/update it
+if ! grep -Eq '^\s*pid\s+' "$NGINX_CONF"; then
+    echo "Adding pid directive to nginx.conf"
+    # insert after the first line in the main context
+    sed -i "1a pid $PID_FILE;" "$NGINX_CONF"
+else
+    # replace existing pid line to match
+    sed -i -E "s|^\s*pid\s+.*;|pid ${PID_FILE};|" "$NGINX_CONF"
+fi
+
+# create symlink if missing or broken
+if [[ -L "$SYMLINK" ]]; then
+    CURRENT_TARGET=$(readlink -f "$SYMLINK")
+    if [[ "$CURRENT_TARGET" != "$NGINX_BIN" ]]; then
+        echo "Updating existing symlink $SYMLINK -> $NGINX_BIN"
+        ln -fs "$NGINX_BIN" "$SYMLINK"
+    fi
+elif [[ -e "$SYMLINK" ]]; then
+    echo "Note: $SYMLINK exists and is not a symlink; skipping creation."
+else
+    ln -s "$NGINX_BIN" "$SYMLINK"
+    echo "Created symlink $SYMLINK -> $NGINX_BIN"
+fi
+
+# create systemd unit
+cat > "$SERVICE_FILE" <<EOF
+[Unit]
+Description=NGINX Service (from source install)
+After=network.target
+
+[Service]
+Type=forking
+ExecStartPre=${NGINX_BIN} -t -c ${NGINX_CONF}
+ExecStart=${NGINX_BIN} -c ${NGINX_CONF}
+ExecReload=${NGINX_BIN} -s reload
+ExecStop=${NGINX_BIN} -s quit
+PIDFile=${PID_FILE}
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+chmod 644 "$SERVICE_FILE"
+
+# reload and enable/start
+systemctl daemon-reexec
+systemctl daemon-reload
+systemctl reset-failed
+systemctl enable --now nginx
+
+echo ""
+echo "NGINX service installed as 'nginx' and started."
+echo ""
+echo "Manage it with:"
+echo "  systemctl start nginx"
+echo "  systemctl stop nginx"
+echo "  systemctl restart nginx"
+echo "  systemctl status nginx"
+echo ""
+echo "Check version via: nginx -v"
+echo "Validate config manually: nginx -t -c $NGINX_CONF"
