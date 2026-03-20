@@ -1,0 +1,42 @@
+185.220.101.45:5000
+45.9.148.112:5000
+103.145.13.22:5000
+198.23.214.77:5000
+91.215.169.12:5000
+malicious-registry.duckdns.org
+docker-update.ddns.net
+k8s-node.mine.nu
+registry-node.no-ip.org
+sys-update.dynamic-dns.net
+registry.cn-hangzhou.aliyuncs.com/random-user
+hub-mirror.c.163.com/random-user
+dockerproxy.com/random-user
+ccr.ccs.tencentyun.com/unknown-user
+registry.cn-shanghai.aliyuncs.com/random-user
+dockerrhub.com
+docker-hub.io
+githbcr.io
+quayy.io
+micrsoft-container.com
+github.io
+github.com
+https://github.com/xmrig/xmrig
+https://github.com/ton-blockchain/miner
+https://github.com/kubernetes/kubernetes (spoof clones often abused)
+https://github.com/docker/docker-ce (fake forks used in malware)
+https://github.com/sysupdate/systemd-update
+https://github.com/kworkerds/kworkerds
+https://github.com/alpine-docker/alpine-docker
+https://github.com/redis-server/redis-server (typosquat variants exist)
+https://github.com/openssh/openssh-portable (fake mirrors abused)
+https://github.com/torvalds/linux (cloned repos used in attacks)
+https://github.com/zzh8829/crack
+https://github.com/m1ghtym0/useful-scripts-for-crypto
+https://github.com/fastdl/hidden-miner
+https://github.com/hello-world/miner-bot
+https://github.com/ubuntu-docker/docker-ubuntu
+https://github.com/nodejs/docker-node (fake forks abused)
+https://github.com/python3-dev/docker-python
+https://github.com/golang/docker-golang
+https://github.com/secure-system/update-service
+https://github.com/cloud-sync/system-update
